@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="filters">
+  <form method="get" action="/" style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+    <input type="text" name="plz" placeholder="PLZ" value="{{ filters.plz }}">
+    <input type="text" name="ort" placeholder="Ort" value="{{ filters.ort }}">
+    <select name="status">
+      <option value="">Alle Status</option>
+      {% for s in statuses %}
+        <option value="{{ s }}" {% if filters.status == s %}selected{% endif %}>{{ s }}</option>
+      {% endfor %}
+    </select>
+    <label><input type="checkbox" name="show_expired" value="1" {% if filters.show_expired %}checked{% endif %}> abgelaufene anzeigen</label>
+    <button type="submit">Filtern</button>
+  </form>
+
+  <button hx-post="/update/start" hx-target="#update-status" hx-swap="innerHTML">Update starten</button>
+</div>
+
+<div id="update-status" hx-get="/update/status" hx-trigger="load, every 3s" hx-swap="innerHTML"></div>
+
+<table>
+  <thead>
+    <tr>
+      <th>Datum</th><th>Plattform</th><th>PLZ</th><th>Ort</th><th>Größe</th>
+      <th>Preis</th><th>B-Plan</th><th>Anbieter</th><th>Link</th>
+      <th>Status</th><th>Haustyp</th><th>Propstack</th><th>Notizen</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for p in properties %}
+    <tr class="{% if p.is_expired %}expired{% endif %}">
+      <td>{{ p.datum }}</td>
+      <td>{{ p.plattform }}</td>
+      <td>{{ p.plz }}</td>
+      <td>{{ p.ort }}</td>
+      <td>{{ p.groesse }}</td>
+      <td>{{ p.preis }}</td>
+      <td>{{ p.bplan }}</td>
+      <td>{{ p.anbieter }}</td>
+      <td><a class="link" href="{{ p.link }}" target="_blank">öffnen</a></td>
+      <td>
+        <form method="post" action="/property/{{ p.id }}/status" style="display:flex; gap:4px;">
+          <select name="status" onchange="this.form.submit()">
+            {% for s in ["Neu", "Geprüft", "Import", "Import fehlt Haustyp", "In Propstack", "Abgelehnt"] %}
+              <option value="{{ s }}" {% if p.status == s %}selected{% endif %}>{{ s }}</option>
+            {% endfor %}
+          </select>
+        </form>
+      </td>
+      <td>
+        <form method="post" action="/property/{{ p.id }}/haustyp" style="display:flex; gap:4px;">
+          <input type="text" name="haustyp" value="{{ p.haustyp or '' }}" size="14" onblur="this.form.submit()">
+        </form>
+      </td>
+      <td>
+        {% if p.propstack_id %}
+          <a class="link" href="https://app.propstack.de/units/{{ p.propstack_id }}" target="_blank">{{ p.propstack_id }}</a>
+        {% endif %}
+      </td>
+      <td>{{ p.notizen }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+<p>{{ properties|length }} Einträge</p>
+{% endblock %}

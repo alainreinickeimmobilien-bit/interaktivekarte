@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Login – Grundstücks-Übersicht</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f5f5f5; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+    form { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); width: 280px; }
+    input { width: 100%; padding: 8px; margin: 10px 0; box-sizing: border-box; }
+    button { width: 100%; padding: 10px; background: #1c3d5a; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    .error { color: #c0392b; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <form method="post" action="/login">
+    <h3>Grundstücks-Übersicht</h3>
+    {% if error %}<p class="error">{{ error }}</p>{% endif %}
+    <input type="password" name="password" placeholder="Passwort" autofocus required>
+    <button type="submit">Anmelden</button>
+  </form>
+</body>
+</html>

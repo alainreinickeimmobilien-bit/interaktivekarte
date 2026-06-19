@@ -1,0 +1,37 @@
+services:
+  webapp:
+    build:
+      context: ..
+      dockerfile: webapp/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - APP_PASSWORD=${APP_PASSWORD}
+      - SECRET_KEY=${SECRET_KEY}
+      - DB_PATH=/webapp/data/grundstuecke.db
+      # Pfade zu Dateien, die NICHT im Repo liegen (siehe README "Umzug auf das NAS"):
+      - PLZ_FILE=/assets/PLZ-Liste_26.03.26.xlsx
+      - DB_PREISE=/assets/Preisliste_massa_haus.db
+      - IMG_BASISORDNER=/assets/bilder
+    volumes:
+      - gs-data:/webapp/data
+      - chrome-profile:/chrome-profile:ro
+      - ${ASSETS_DIR:-./assets}:/assets:ro
+    restart: unless-stopped
+
+  thinkimmo-browser:
+    image: lscr.io/linuxserver/chromium:latest
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Berlin
+    volumes:
+      - chrome-profile:/config
+    ports:
+      - "3001:3000"   # noVNC im Browser: http://NAS-IP:3001
+    shm_size: "1gb"
+    restart: unless-stopped
+
+volumes:
+  gs-data:
+  chrome-profile:

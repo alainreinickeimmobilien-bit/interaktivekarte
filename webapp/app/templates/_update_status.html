@@ -1,0 +1,9 @@
+{% if run %}
+  <strong>
+    Letzter Lauf: {{ run.started_at.strftime("%d.%m.%Y %H:%M") }} —
+    {% if run.status == "running" %}läuft...{% elif run.status == "success" %}fertig ✅{% else %}Fehler ❌{% endif %}
+  </strong>
+  <pre>{{ run.log_text }}</pre>
+{% else %}
+  <em>Noch kein Update-Lauf.</em>
+{% endif %}
