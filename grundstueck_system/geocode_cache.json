@@ -193,10 +193,6 @@
     "lat": 50.8240764,
     "lon": 12.9002481
   },
-  "neukirchen, deutschland": {
-    "lat": 54.8687122,
-    "lon": 8.7339915
-  },
   "lichtenwalde, deutschland": {
     "lat": 50.8831379,
     "lon": 13.0027356
@@ -240,10 +236,6 @@
   "niederwiesa, deutschland": {
     "lat": 50.8630791,
     "lon": 13.0159707
-  },
-  "lichtenau, deutschland": {
-    "lat": 49.2805135,
-    "lon": 10.6836351
   },
   "penig, deutschland": {
     "lat": 50.9331827,
@@ -292,5 +284,13 @@
   "bobritzsch-hilbersdorf, deutschland": {
     "lat": 50.8934243,
     "lon": 13.4447107
+  },
+  "neukirchen, erzgebirgskreis, deutschland": {
+    "lat": 50.7790737,
+    "lon": 12.8646119
+  },
+  "lichtenau, mittelsachsen, deutschland": {
+    "lat": 50.9185322,
+    "lon": 12.9583912
   }
 }

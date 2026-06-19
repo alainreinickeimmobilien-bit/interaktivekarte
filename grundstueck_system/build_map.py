@@ -214,7 +214,7 @@ ALAIN_REINICKE_EINZEL = [
     {"titel": "Grundstück in Chemnitz Kaßberg", "ort": "Chemnitz Kaßberg", "groesse": "490 m²", "preis": "",
      "link": "https://alainreinicke.landingpage.immobilien/public/exposee/baugrundstuck-aufm-kassberg-eyJzaG9wX3Rva2VuIjoiRHFGU1ZDY0M3V29XbmRWZ2dRODNlTHRKIiwicHJvcGVydHlfdG9rZW4iOiJhWUtIaUN5OUw1b2ZIUmdSbk1uWEJSSHkifQ=="},
     {"titel": "Baugebiet Neukirchen (Försterstr.) – aktuell vermarktete Parzelle, ges. 688–1.099 m² möglich",
-     "ort": "Neukirchen", "groesse": "688 m²", "preis": "110080",
+     "ort": "Neukirchen, Erzgebirgskreis", "groesse": "688 m²", "preis": "110080",
      "link": "https://alainreinicke.landingpage.immobilien/public/exposee/baugebiet-an-der-forststrasse-eyJzaG9wX3Rva2VuIjoiRHFGU1ZDY0M3V29XbmRWZ2dRODNlTHRKIiwicHJvcGVydHlfdG9rZW4iOiJMTHZUWlFOb1ZWdVd4WVFFV0Q5RUxhRFAifQ=="},
     {"titel": "Grundstück Kemtau", "ort": "Kemtau", "groesse": "798 m²", "preis": "",
      "link": "https://alainreinicke.landingpage.immobilien/public/exposee/bauen-in-kemtau-mit-ausblick-eyJzaG9wX3Rva2VuIjoiRHFGU1ZDY0M3V29XbmRWZ2dRODNlTHRKIiwicHJvcGVydHlfdG9rZW4iOiJKaEQzSzJZMkV1NkdzNFN5bWZkQkU0NW8ifQ=="},
@@ -229,7 +229,7 @@ ALAIN_REINICKE_EINZEL = [
      "link": "https://alainreinicke.landingpage.immobilien/public/exposee/grosses-baugebiet-im-brauteichweg-wittgensdorf-ihr-traumhaus-wartet-eyJzaG9wX3Rva2VuIjoiRHFGU1ZDY0M3V29XbmRWZ2dRODNlTHRKIiwicHJvcGVydHlfdG9rZW4iOiJjNkcxNEpYaU5yZXdrOWJVa294c2pIdksifQ=="},
     {"titel": "Grundstück Kleinolbersdorf-Altenhain", "ort": "Kleinolbersdorf-Altenhain", "groesse": "1.132 m²", "preis": "",
      "link": "https://alainreinicke.landingpage.immobilien/public/exposee/schnapp-dir-dein-traumgrundstuck-in-kleinobersdorf-altenhain-eyJzaG9wX3Rva2VuIjoiRHFGU1ZDY0M3V29XbmRWZ2dRODNlTHRKIiwicHJvcGVydHlfdG9rZW4iOiI1UWRXN1cxUFBtNEV6VzNYOUdFY1RXWTkifQ=="},
-    {"titel": "Grundstück Lichtenau", "ort": "Lichtenau", "groesse": "2.570 m²", "preis": "",
+    {"titel": "Grundstück Lichtenau", "ort": "Lichtenau, Mittelsachsen", "groesse": "2.570 m²", "preis": "",
      "link": "https://alainreinicke.landingpage.immobilien/public/exposee/bau-doch-in-lichtenau-eyJzaG9wX3Rva2VuIjoiRHFGU1ZDY0M3V29XbmRWZ2dRODNlTHRKIiwicHJvcGVydHlfdG9rZW4iOiJjRmpoWWluMmd4enprRUJBVTMzdEtVM3AifQ=="},
 ]
 
@@ -238,7 +238,7 @@ ALAIN_REINICKE_EINZEL = [
 # "parzellen"; sonst werden anzahl/groesse_min/-max + Preis/m² zur Schätzung
 # gleichmäßig verteilt ("ca."-Werte, klar gekennzeichnet).
 ALAIN_REINICKE_BAUFELDER = [
-    {"titel_basis": "Baugebiet Neukirchen (Krehergrund)", "ort": "Neukirchen", "anzahl": 3,
+    {"titel_basis": "Baugebiet Neukirchen (Krehergrund)", "ort": "Neukirchen, Erzgebirgskreis", "anzahl": 3,
      "groesse_min": 1000, "groesse_max": 1254, "preis_pro_qm": 185,
      "link": "https://alainreinicke.landingpage.immobilien/public/exposee/grundstuck-am-krehergrund-eyJzaG9wX3Rva2VuIjoiRHFGU1ZDY0M3V29XbmRWZ2dRODNlTHRKIiwicHJvcGVydHlfdG9rZW4iOiJHcjRjUzY4Q1JDekpZbzhYbUY4Nm1tV0oifQ=="},
     {"titel_basis": "Baugebiet Lichtenwalde", "ort": "Lichtenwalde", "anzahl": 10,
