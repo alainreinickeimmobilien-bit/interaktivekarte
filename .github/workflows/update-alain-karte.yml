@@ -5,6 +5,11 @@ on:
     # täglich um 05:00 UTC (= 06:00/07:00 Uhr deutscher Zeit)
     - cron: "0 5 * * *"
   workflow_dispatch: {}
+  push:
+    branches: [main]
+    paths:
+      - "alain_reinicke_system/**"
+      - ".github/workflows/update-alain-karte.yml"
 
 permissions:
   contents: write
