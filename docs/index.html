@@ -87,7 +87,6 @@ Object.keys(grouped).forEach(key => {
         <tr><td>Preis:</td><td>${preisText}</td></tr>
         <tr><td>Ort:</td><td>${l.ort || ""}${l.plz ? " ("+l.plz+")" : ""}</td></tr>
       </table>
-      <div class="approx">Ungefähre Lage (Ort/Stadtteil, keine genaue Adresse im Exposé)</div>
       ${l.url ? `<a class="expose-link" href="${l.url}" target="_blank">Exposé öffnen →</a>` : ""}
     `;
     marker.bindPopup(html);
