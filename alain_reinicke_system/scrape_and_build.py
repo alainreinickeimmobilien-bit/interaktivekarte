@@ -123,6 +123,11 @@ TYPE_MAP = {
     "Praxis": "Gewerbe",
     "Laden": "Gewerbe",
     "Hotel": "Gewerbe",
+    "Einzelhandel": "Gewerbe",
+    "Halle": "Gewerbe",
+    "Lager": "Gewerbe",
+    "Industrie": "Gewerbe",
+    "Büroetage": "Gewerbe",
 }
 
 # Unterkategorien (rs_category), die bei Mietobjekten auftauchen und auf eine
@@ -182,6 +187,10 @@ def fetch_listing(url):
     entry["kauf_oder_miete"] = "Miete" if category.lower().startswith("miete") else "Kauf"
 
     sub = fields.get("rs_category", "")
+    if not sub and "–" in category:
+        # Manche Gewerbe-Kauf-Anzeigen liefern gar kein rs_category-Feld;
+        # dann die Unterkategorie aus "Kauf – Einzelhandel" o.ä. ableiten.
+        sub = category.split("–", 1)[1].strip()
     if entry["kauf_oder_miete"] == "Miete" and sub in MIETE_WOHNUNG_SUBTYPES:
         entry["typ"] = "Mietwohnung"
     elif entry["kauf_oder_miete"] == "Miete" and sub in MIETE_GEWERBE_SUBTYPES:
@@ -189,10 +198,16 @@ def fetch_listing(url):
     else:
         entry["typ"] = TYPE_MAP.get(sub, sub or "Sonstiges")
 
-    entry["wohnflaeche_m2"] = parse_number(fields.get("living_space"))
+    # Wohn-/Nutzfläche: Gewerbeeinheiten führen sie unter "net_floor_space"
+    # statt "living_space".
+    entry["wohnflaeche_m2"] = parse_number(fields.get("living_space") or fields.get("net_floor_space"))
     entry["zimmer"] = parse_number(fields.get("number_of_rooms"))
     entry["grundstueck_m2"] = parse_number(fields.get("plot_area"))
-    entry["preis"] = parse_number(fields.get("price"))
+    # Preis: Kaufobjekte führen "price"; Mietobjekte führen stattdessen
+    # "total_rent" (Warmmiete) bzw. "base_rent" (Kaltmiete) als Preisfeld.
+    entry["preis"] = parse_number(
+        fields.get("price") or fields.get("total_rent") or fields.get("base_rent")
+    )
 
     if "reserviert" in html.lower()[:200] or "Reserviert" in fields.get("category", ""):
         pass  # Statusfeld variiert je Anzeige; grobe Erkennung über Übersichtsseite separat
