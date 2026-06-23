@@ -236,7 +236,11 @@ def build_markers(units, geocache, title_to_url):
 
         markers.append({
             "titel": title,
-            "url": title_to_url.get(title),
+            # Fallback auf die allgemeine Angebotsübersicht, falls die
+            # Anzeige (noch) keine eigene Exposé-Seite auf der Website hat –
+            # so ist im Popup immer ein "öffentliche Landingpage"-Link da.
+            "url": title_to_url.get(title) or OVERVIEW_URL,
+            "url_exact": title in title_to_url,
             "typ": typ,
             "kauf_oder_miete": kauf_oder_miete,
             "ort": detail.get("city"),
@@ -335,7 +339,7 @@ function listingBlock(l, withDot) {{
       <tr><td>Preis:</td><td>${{preisText(l)}}</td></tr>
       <tr><td>Ort:</td><td>${{l.ort || ""}}${{l.plz ? " ("+l.plz+")" : ""}}</td></tr>
     </table>
-    ${{l.url ? `<a class="expose-link" href="${{l.url}}" target="_blank">Exposé öffnen →</a>` : ""}}
+    <a class="expose-link" href="${{l.url}}" target="_blank">${{l.url_exact ? "Exposé öffnen →" : "Zur Angebotsübersicht →"}}</a>
   `;
 }}
 
