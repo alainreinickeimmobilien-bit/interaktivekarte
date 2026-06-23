@@ -274,6 +274,13 @@ def build_html(markers):
   a.expose-link {{ display:inline-block; margin-top:6px; font-size:13px; }}
   .stand {{ position:absolute; bottom:6px; left:6px; z-index:1000; background:rgba(255,255,255,0.85);
     padding:3px 8px; border-radius:6px; font-size:11px; color:#555; }}
+  .cluster-marker {{ width:26px; height:26px; border-radius:50%; background:#222; color:#fff;
+    font-size:13px; font-weight:bold; display:flex; align-items:center; justify-content:center;
+    box-shadow:0 1px 4px rgba(0,0,0,0.5); border:2px solid #fff; }}
+  .popup-group {{ font-weight:bold; margin-bottom:8px; font-size:13px; color:#333; }}
+  .popup-divider {{ border:none; border-top:1px solid #ddd; margin:10px 0; }}
+  .dot {{ display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:6px; vertical-align:middle; }}
+  .leaflet-popup-content {{ max-height:320px; overflow-y:auto; }}
 </style>
 </head>
 <body>
@@ -294,11 +301,6 @@ def build_html(markers):
 const colors = {colors_json};
 const listings = {markers_json};
 
-function jitter([lat, lng], i) {{
-  const d = 0.003 * (i % 5) - 0.006;
-  return [lat + d, lng - d];
-}}
-
 const map = L.map('map').setView([50.85, 12.95], 10);
 L.tileLayer('https://{{s}}.tile.openstreetmap.org/{{z}}/{{x}}/{{y}}.png', {{
   attribution: '&copy; OpenStreetMap-Mitwirkende',
@@ -315,36 +317,58 @@ listings.forEach(l => {{
   grouped[key].push(l);
 }});
 
+function preisText(l) {{
+  return l.preis ? (l.kauf_oder_miete === "Miete"
+    ? l.preis.toLocaleString("de-DE") + " € / Monat"
+    : l.preis.toLocaleString("de-DE") + " €") : "auf Anfrage";
+}}
+
+function listingBlock(l, withDot) {{
+  const color = colors[l.typ] || "#7f7f7f";
+  return `
+    <div class="popup-title">${{withDot ? `<span class="dot" style="background:${{color}}"></span>` : ""}}${{l.titel || "Anzeige"}}</div>
+    <table class="popup-table">
+      <tr><td>Art der Immobilie:</td><td>${{l.typ}}${{l.kauf_oder_miete ? " ("+l.kauf_oder_miete+")" : ""}}</td></tr>
+      <tr><td>Wohnfläche:</td><td>${{l.wohnflaeche_m2 != null ? l.wohnflaeche_m2 + " m²" : "k.A."}}</td></tr>
+      <tr><td>Zimmer:</td><td>${{l.zimmer != null ? l.zimmer : "k.A."}}</td></tr>
+      <tr><td>Grundstück:</td><td>${{l.grundstueck_m2 != null ? l.grundstueck_m2.toLocaleString("de-DE") + " m²" : "k.A."}}</td></tr>
+      <tr><td>Preis:</td><td>${{preisText(l)}}</td></tr>
+      <tr><td>Ort:</td><td>${{l.ort || ""}}${{l.plz ? " ("+l.plz+")" : ""}}</td></tr>
+    </table>
+    ${{l.url ? `<a class="expose-link" href="${{l.url}}" target="_blank">Exposé öffnen →</a>` : ""}}
+  `;
+}}
+
 let bounds = [];
 Object.keys(grouped).forEach(key => {{
   const group = grouped[key];
-  group.forEach((l, i) => {{
-    const base = [l.lat, l.lon];
-    const pos = group.length > 1 ? jitter(base, i) : base;
-    bounds.push(pos);
+  const pos = [group[0].lat, group[0].lon];
+  bounds.push(pos);
+
+  if (group.length === 1) {{
+    const l = group[0];
     const color = colors[l.typ] || "#7f7f7f";
     const marker = L.circleMarker(pos, {{
       radius: 9, color: "#222", weight: 1, fillColor: color, fillOpacity: 0.9
     }}).addTo(map);
+    marker.bindPopup(listingBlock(l, false));
+    return;
+  }}
 
-    const preisText = l.preis ? (l.kauf_oder_miete === "Miete"
-      ? l.preis.toLocaleString("de-DE") + " € / Monat"
-      : l.preis.toLocaleString("de-DE") + " €") : "auf Anfrage";
-
-    const html = `
-      <div class="popup-title">${{l.titel || "Anzeige"}}</div>
-      <table class="popup-table">
-        <tr><td>Art der Immobilie:</td><td>${{l.typ}}${{l.kauf_oder_miete ? " ("+l.kauf_oder_miete+")" : ""}}</td></tr>
-        <tr><td>Wohnfläche:</td><td>${{l.wohnflaeche_m2 != null ? l.wohnflaeche_m2 + " m²" : "k.A."}}</td></tr>
-        <tr><td>Zimmer:</td><td>${{l.zimmer != null ? l.zimmer : "k.A."}}</td></tr>
-        <tr><td>Grundstück:</td><td>${{l.grundstueck_m2 != null ? l.grundstueck_m2.toLocaleString("de-DE") + " m²" : "k.A."}}</td></tr>
-        <tr><td>Preis:</td><td>${{preisText}}</td></tr>
-        <tr><td>Ort:</td><td>${{l.ort || ""}}${{l.plz ? " ("+l.plz+")" : ""}}</td></tr>
-      </table>
-      ${{l.url ? `<a class="expose-link" href="${{l.url}}" target="_blank">Exposé öffnen →</a>` : ""}}
-    `;
-    marker.bindPopup(html);
+  // Mehrere Anzeigen am selben Standort (z.B. mehrere Einheiten im selben
+  // Haus oder mehrere Grundstücke am selben Ort): ein Marker mit
+  // Zähler-Badge, alle Anzeigen im Popup untereinander gestapelt.
+  const icon = L.divIcon({{
+    className: '',
+    html: `<div class="cluster-marker">${{group.length}}</div>`,
+    iconSize: [26, 26],
+    iconAnchor: [13, 13]
   }});
+  const marker = L.marker(pos, {{ icon }}).addTo(map);
+  const blocks = group
+    .map(l => listingBlock(l, true))
+    .join('<hr class="popup-divider">');
+  marker.bindPopup(`<div class="popup-group">${{group.length}} Anzeigen an diesem Standort</div>${{blocks}}`);
 }});
 
 if (bounds.length) {{
