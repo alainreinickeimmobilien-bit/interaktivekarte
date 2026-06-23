@@ -85,6 +85,14 @@ def geocode(query, cache, plz=None, ort=None):
     return result
 
 
+# Anzeigen, die zwar (noch) crawlbar sind, aber laut Makler nicht mehr
+# verfügbar sind (z.B. veraltete Links, die auf der Homepage selbst nicht
+# mehr aktualisiert wurden). Manuell gepflegte Sperrliste.
+EXCLUDED_LISTINGS = {
+    "137-m2-wohnung-aufm-kapellenberg",  # nicht mehr verfügbar (auch nicht auf der HP)
+}
+
+
 def get_overview_links():
     resp = requests.get(OVERVIEW_URL, headers=HEADERS, timeout=20)
     resp.raise_for_status()
@@ -92,6 +100,7 @@ def get_overview_links():
         r'https://alainreinicke\.landingpage\.immobilien/public/exposee/[A-Za-z0-9\-_=]+',
         resp.text,
     ))
+    links = {l for l in links if not any(slug in l for slug in EXCLUDED_LISTINGS)}
     return sorted(links)
 
 
