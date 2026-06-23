@@ -130,5 +130,217 @@
   "09569 schönerstädt, deutschland": {
     "lat": 51.1206018,
     "lon": 12.9096941
+  },
+  "einsiedler weg, 09128 chemnitz, deutschland": {
+    "lat": 50.7818305,
+    "lon": 12.9956741
+  },
+  "hauptstraße 62, 09569 schönerstädt, deutschland": {
+    "lat": 50.8906484,
+    "lon": 13.1367138
+  },
+  "am hang 4, 09244 lichtenau, deutschland": {
+    "lat": 50.8953579,
+    "lon": 12.8974798
+  },
+  "bayreuther straße 10, 09130 chemnitz, deutschland": {
+    "lat": 50.8392147,
+    "lon": 12.9508261
+  },
+  "lessingstraße 2, 09130 chemnitz, deutschland": {
+    "lat": 50.840753,
+    "lon": 12.9343107
+  },
+  "uttenweiler weg 5, 09322 penig, deutschland": {
+    "lat": 50.9322406,
+    "lon": 12.707943
+  },
+  "dorfstrasse 198, 09306 königshain-wiederau, deutschland": {
+    "lat": 50.9666777,
+    "lon": 12.89586
+  },
+  "ernst-thälmann-strasse, 09577 niederwiesa, deutschland": {
+    "lat": 50.8653156,
+    "lon": 13.0071295
+  },
+  "am mühlgraben 2, 09350 lichtenstein, deutschland": {
+    "lat": 50.7554079,
+    "lon": 12.6338708
+  },
+  "obere dorfstrasse, 09326 altgeringswalde, deutschland": {
+    "lat": 51.0853851,
+    "lon": 12.9259099
+  },
+  "uhlestr. 34, 09120 chemnitz, deutschland": {
+    "lat": 50.8072681,
+    "lon": 12.9163323
+  },
+  "reitzenhainer straße 5, 09120 chemnitz, deutschland": {
+    "lat": 50.80816,
+    "lon": 12.9139848
+  },
+  "sebastian-bach-straße 78, 09130 chemnitz, deutschland": {
+    "lat": 50.8372018,
+    "lon": 12.9490952
+  },
+  "bahnhofstraße 71, 09376 oelsnitz, deutschland": {
+    "lat": 50.7335957,
+    "lon": 12.6936917
+  },
+  "untere talstraße 27, 04736 waldheim, deutschland": {
+    "lat": 51.0809328,
+    "lon": 13.056717
+  },
+  "hauptstrasse 190, 09603 großschirma, deutschland": {
+    "lat": 50.9661893,
+    "lon": 13.2731921
+  },
+  "an der forststrasse, 09221 neukirchen, deutschland": {
+    "lat": 54.8687122,
+    "lon": 8.7339915
+  },
+  "hauptstr. 190, 09603 großschirma, deutschland": {
+    "lat": 50.9661893,
+    "lon": 13.2731921
+  },
+  "oberer weg, 09432 hohndorf, deutschland": {
+    "lat": 50.7195753,
+    "lon": 13.0901981
+  },
+  "am waldweg, 09235 burkhardtsdorf-kemtau, deutschland": {
+    "lat": 50.7374439,
+    "lon": 12.9528101
+  },
+  "borssenanger., 09113 chemnitz, deutschland": {
+    "lat": 50.837276,
+    "lon": 12.8940603
+  },
+  "limbacher str. 68, 09113 chemnitz, deutschland": {
+    "lat": 50.8371565,
+    "lon": 12.8957441
+  },
+  "apfelweg, 09577 lichtenwalde, deutschland": {
+    "lat": 50.8805356,
+    "lon": 12.9940081
+  },
+  "zwergenweg 9, 09224 chemnitz, deutschland": {
+    "lat": 50.8168649,
+    "lon": 12.7969985
+  },
+  "am holzboden 2, 09405 gornau/erzgeb., deutschland": {
+    "lat": 50.7600067,
+    "lon": 13.0374664
+  },
+  "bräuteichweg, 09228 chemnitz, deutschland": {
+    "lat": 50.8761333,
+    "lon": 12.870096
+  },
+  "marburger weg, 09120 chemnitz, deutschland": {
+    "lat": 50.8168792,
+    "lon": 12.907968
+  },
+  "borssenanger, 09113 chemnitz, deutschland": {
+    "lat": 50.837276,
+    "lon": 12.8940603
+  },
+  "uhlestraße 34, 09120 chemnitz, deutschland": {
+    "lat": 50.8072681,
+    "lon": 12.9163323
+  },
+  "dresdner straße 125, 09131 chemnitz, deutschland": {
+    "lat": 50.8511666,
+    "lon": 12.9526195
+  },
+  "hauptstrasse 62, 09235 burkhardtsdorf, deutschland": {
+    "lat": 50.7256756,
+    "lon": 12.8751017
+  },
+  "hauptstr. 62, 09235 burkhardtsdorf, deutschland": {
+    "lat": 50.7256756,
+    "lon": 12.8751017
+  },
+  "grünaer straße 1b, 09 chemnitz, deutschland": {
+    "lat": 50.8323531,
+    "lon": 12.918914
+  },
+  "gießerweg 2b, 09212 limbach-oberfrohna, deutschland": {
+    "lat": 50.8581616,
+    "lon": 12.7498988
+  },
+  "chemnitzer strasse 27, 09244 oberlichtenau, deutschland": {
+    "lat": 50.9033238,
+    "lon": 12.9784952
+  },
+  "schützenplatz, 09648 mittweida, deutschland": {
+    "lat": 50.9864608,
+    "lon": 12.988487
+  },
+  "rochlitzer strasse 53c, 09306 erlau, deutschland": {
+    "lat": 51.0073388,
+    "lon": 12.9270083
+  },
+  "zwickauer str. 157, 09116 chemnitz, deutschland": {
+    "lat": 50.8222394,
+    "lon": 12.892942
+  },
+  "georg-weerth-straße 24, 09117 chemnitz, deutschland": {
+    "lat": 50.8324308,
+    "lon": 12.8303876
+  },
+  "carolastraße 5, 09111 chemnitz, deutschland": {
+    "lat": 50.8379121,
+    "lon": 12.9275539
+  },
+  "an der halde, 09337 hohenstein-ernstthal, deutschland": {
+    "lat": 50.8086109,
+    "lon": 12.7270492
+  },
+  "seupahner straße 6, 09306 königsfeld, deutschland": {
+    "lat": 51.0907309,
+    "lon": 12.8035639
+  },
+  "krenkelstrasse 3a, 09120 chemnitz, deutschland": {
+    "lat": 50.8034491,
+    "lon": 12.9105524
+  },
+  "obere hauptstraße 62, 09392 auerbach, deutschland": {
+    "lat": 50.6799758,
+    "lon": 12.9106567
+  },
+  "zwickauer straße 157, 09116 chemnitz, deutschland": {
+    "lat": 50.8222394,
+    "lon": 12.892942
+  },
+  "zwickauer strasse 168, 09116 chemnitz, deutschland": {
+    "lat": 50.8218322,
+    "lon": 12.8875694
+  },
+  "seilerweg 2, 09235 burkhardtsdorf, deutschland": {
+    "lat": 50.7326334,
+    "lon": 12.9266271
+  },
+  "zwickauer straße 518, 09117 chemnitz, deutschland": {
+    "lat": 50.8112882,
+    "lon": 12.8264919
+  },
+  "am einsiedler wald, 09128 chemnitz, deutschland": {
+    "lat": 50.8323531,
+    "lon": 12.918914
+  },
+  "am krehergrund, 09221 neukirchen/erzgebirge, deutschland": {
+    "lat": 50.7775128,
+    "lon": 12.8481025
+  },
+  "mittweidaer straße 81, 09249 taura, deutschland": {
+    "lat": 50.9168091,
+    "lon": 12.8277615
+  },
+  "chemnitzer str. 27, 09244 oberlichtenau, deutschland": {
+    "lat": 50.9033238,
+    "lon": 12.9784952
+  },
+  "uferstraße 9, 09235 burkhardtsdorf, deutschland": {
+    "lat": 50.7333532,
+    "lon": 12.9261303
   }
 }

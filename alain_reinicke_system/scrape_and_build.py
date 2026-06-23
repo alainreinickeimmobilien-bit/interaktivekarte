@@ -1,11 +1,18 @@
-"""Crawlt alle Anzeigen von alainreinickeimmobilien.de und baut daraus eine
-einbettbare Leaflet/OpenStreetMap-Karte (docs/index.html für GitHub Pages).
+"""Holt alle aktiv vermarkteten Immobilien von Alain Reinicke Immobilien über
+die Propstack-API und baut daraus eine einbettbare Leaflet/OpenStreetMap-Karte
+(docs/index.html für GitHub Pages).
 
 Läuft täglich per GitHub Actions (siehe .github/workflows/update-alain-karte.yml)
-und nimmt neue Anzeigen automatisch auf bzw. entfernt verschwundene.
+und nimmt neue Anzeigen automatisch auf bzw. entfernt verschwundene – Propstacks
+eigenes "status"-Feld (Vermarktung/Reserviert/Abgeschlossen/...) übernimmt die
+Sichtbarkeitsentscheidung, kein Rätselraten über HTML-Marker mehr nötig.
+
+Benötigt den Umgebungsvariable PROPSTACK_API_KEY (Read-Only-Key aus Propstack).
 """
 import json
+import os
 import re
+import sys
 import time
 from html import unescape
 from pathlib import Path
@@ -16,8 +23,16 @@ BASE = Path(__file__).resolve().parent.parent
 OUT_HTML = BASE / "docs" / "index.html"
 GEOCACHE = Path(__file__).resolve().parent / "geocode_cache.json"
 
+PROPSTACK_API_KEY = os.environ.get("PROPSTACK_API_KEY")
+PROPSTACK_BASE = "https://api.propstack.de/v1"
 OVERVIEW_URL = "https://alainreinickeimmobilien.de/immobilien-angebote-chemnitz/"
 HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; alain-reinicke-karte/1.0)"}
+
+ACTIVE_STATUS = "Vermarktung"
+
+# Anzeigen, die laut Propstack-Status zwar (noch) aktiv sind, aber manuell
+# als nicht mehr relevant markiert wurden.
+EXCLUDED_TITLES = set()
 
 COLORS = {
     # Tableau10-Palette: bewusst maximal unterscheidbare Kategoriefarben
@@ -43,8 +58,8 @@ def save_geocache(cache):
     GEOCACHE.write_text(json.dumps(cache, ensure_ascii=False, indent=2))
 
 
-# Orte, die Nominatim unter der vollen "PLZ Ort"-Schreibweise nicht findet
-# (Tippfehler/Abkürzungen aus dem Exposé) und die deshalb umgeschrieben werden.
+# Ortsnamen, die Nominatim nicht direkt findet (Tippfehler/Abkürzungen) und
+# die deshalb auf eine geocodierbare Form umgeschrieben werden.
 ORT_FIXES = {
     "gornau/erzgeb.": "Gornau, Erzgebirgskreis",
     "schönerstädt": "Schönerstadt, Oederan",
@@ -63,7 +78,7 @@ def _nominatim_request(query):
     return {"lat": float(data[0]["lat"]), "lon": float(data[0]["lon"])} if data else None
 
 
-def geocode(query, cache, plz=None, ort=None):
+def geocode(query, cache, ort=None):
     if not query:
         return None
     key = query.strip().lower()
@@ -72,10 +87,8 @@ def geocode(query, cache, plz=None, ort=None):
     result = None
     try:
         result = _nominatim_request(query)
-        # Fallback 1: ohne PLZ, nur Ortsname (PLZ-Praefix kann die Trefferquote senken)
         if not result and ort:
             result = _nominatim_request(f"{ort}, Deutschland")
-        # Fallback 2: bekannte Korrektur für abweichende Schreibweisen
         if not result and ort:
             fixed = ORT_FIXES.get(ort.strip().lower())
             if fixed:
@@ -87,132 +100,155 @@ def geocode(query, cache, plz=None, ort=None):
     return result
 
 
-# Anzeigen, die zwar (noch) crawlbar sind, aber laut Makler nicht mehr
-# verfügbar sind (z.B. veraltete Links, die auf der Homepage selbst nicht
-# mehr aktualisiert wurden). Manuell gepflegte Sperrliste.
-EXCLUDED_LISTINGS = {
-    "137-m2-wohnung-aufm-kapellenberg",  # nicht mehr verfügbar (auch nicht auf der HP)
-}
-
-
-def get_overview_links():
-    resp = requests.get(OVERVIEW_URL, headers=HEADERS, timeout=20)
+def propstack_get(path, **params):
+    resp = requests.get(
+        f"{PROPSTACK_BASE}/{path}",
+        params=params,
+        headers={"X-API-KEY": PROPSTACK_API_KEY},
+        timeout=20,
+    )
     resp.raise_for_status()
-    links = set(re.findall(
-        r'https://alainreinicke\.landingpage\.immobilien/public/exposee/[A-Za-z0-9\-_=]+',
-        resp.text,
-    ))
-    links = {l for l in links if not any(slug in l for slug in EXCLUDED_LISTINGS)}
-    return sorted(links)
+    return resp.json()
 
 
-FIELD_RE = re.compile(
-    r'data-field-name="(?P<name>[a-z_]+)">\s*<td>[^<]*</td>\s*<td class="text-right">\s*(?P<value>[^<]*?)\s*</td>',
-    re.S,
-)
-TYPE_MAP = {
-    "Einfamilienhaus": "Einfamilienhaus",
-    "Doppelhaushälfte": "Doppelhaushälfte",
-    "Mehrfamilienhaus": "Mehrfamilienhaus",
-    "Eigentumswohnung": "Eigentumswohnung",
-    "Wohnung": "Eigentumswohnung",
-    "Grundstück": "Grundstück",
-    "Baugrundstück": "Grundstück",
-    "Gewerbe": "Gewerbe",
-    "Büro": "Gewerbe",
-    "Praxis": "Gewerbe",
-    "Laden": "Gewerbe",
-    "Hotel": "Gewerbe",
-    "Einzelhandel": "Gewerbe",
-    "Halle": "Gewerbe",
-    "Lager": "Gewerbe",
-    "Industrie": "Gewerbe",
-    "Büroetage": "Gewerbe",
-}
-
-# Unterkategorien (rs_category), die bei Mietobjekten auftauchen und auf eine
-# einheitliche Bezeichnung ("Mietwohnung" / "Gewerbe") gemappt werden, statt
-# als unbeschrifteter Rohwert ("Etagenwohnung", "Penthouse" etc.) zu erscheinen.
-MIETE_WOHNUNG_SUBTYPES = {
-    "Wohnung", "Etagenwohnung", "Dachgeschoss", "Penthouse", "Maisonette",
-    "Erdgeschosswohnung", "Souterrain", "Loft", "Apartment",
-}
-MIETE_GEWERBE_SUBTYPES = {
-    "Büro", "Büroetage", "Praxis", "Laden", "Halle", "Lager", "Hotel", "Gewerbe",
-}
+def fetch_active_units():
+    """Alle Units mit Status 'Vermarktung' (= aktiv beworben).
+    Die Propstack-Pagination liefert vereinzelt dieselbe Unit auf zwei
+    Seiten zurück, daher zusätzlich nach id deduplizieren."""
+    units, page, seen = [], 1, set()
+    while True:
+        batch = propstack_get("units.json", page=page)
+        if not batch:
+            break
+        for u in batch:
+            if u["id"] not in seen:
+                seen.add(u["id"])
+                units.append(u)
+        page += 1
+    return [u for u in units if (u.get("status") or {}).get("name") == ACTIVE_STATUS]
 
 
 def parse_number(text):
     if not text:
         return None
-    text = text.replace(".", "").replace(",", ".")
+    text = str(text).replace(".", "").replace(",", ".")
     m = re.search(r"[\d.]+", text)
     return float(m.group()) if m else None
 
 
-def fetch_listing(url):
-    entry = {
-        "titel": None, "url": url, "typ": "Sonstiges", "kauf_oder_miete": None,
-        "ort": None, "plz": None, "geo_query": None,
-        "wohnflaeche_m2": None, "zimmer": None, "grundstueck_m2": None, "preis": None,
-        "status": "aktiv",
-    }
+def fields_lookup(required_fields, *names):
+    for f in required_fields or []:
+        if f.get("name") in names:
+            return f.get("value")
+    return None
+
+
+def categorize(rs_type, marketing_type, title, number_of_rooms):
+    t = (title or "").lower()
+    if rs_type == "TRADE_SITE":
+        return "Grundstück"
+    if rs_type in ("STORE", "OFFICE"):
+        return "Gewerbe"
+    if rs_type == "APARTMENT":
+        return "Mietwohnung" if marketing_type == "RENT" else "Eigentumswohnung"
+    if rs_type == "HOUSE":
+        if "mfh" in t or "mehrfamilienhaus" in t or "wohnungen" in t:
+            return "Mehrfamilienhaus"
+        if "doppelhaushälfte" in t or "dhh" in t:
+            return "Doppelhaushälfte"
+        if number_of_rooms and number_of_rooms >= 10:
+            return "Mehrfamilienhaus"
+        return "Einfamilienhaus"
+    return "Sonstiges"
+
+
+def build_geo_query(detail):
+    street = (detail.get("street") or "").strip()
+    house_number = (detail.get("house_number") or "").strip()
+    zip_code = (detail.get("zip_code") or "").strip()
+    city = (detail.get("city") or "").strip()
+    district = (detail.get("district") or "").strip()
+    if street:
+        addr = f"{street} {house_number}".strip()
+        return f"{addr}, {zip_code} {city}, Deutschland".strip()
+    ort = district or city
+    return f"{zip_code} {ort}, Deutschland".strip()
+
+
+def fetch_website_links():
+    """Leichte, fehlertolerante Zuordnung Titel -> öffentlicher Exposé-Link.
+    Nur für den 'Exposé öffnen'-Button; alle Objektdaten kommen aus Propstack."""
     try:
-        resp = requests.get(url, headers=HEADERS, timeout=20)
+        resp = requests.get(OVERVIEW_URL, headers=HEADERS, timeout=20)
+        resp.raise_for_status()
     except Exception:
-        entry["status"] = "fehler"
-        return entry
-    if resp.status_code != 200:
-        entry["status"] = f"http_{resp.status_code}"
-        return entry
+        return {}
+    links = set(re.findall(
+        r'https://alainreinicke\.landingpage\.immobilien/public/exposee/[A-Za-z0-9\-_=]+',
+        resp.text,
+    ))
+    title_to_url = {}
+    for url in links:
+        try:
+            r = requests.get(url, headers=HEADERS, timeout=15)
+            if r.status_code != 200:
+                continue
+            m = re.search(r'<h1 class="lp-title">([^<]*)</h1>', r.text)
+            if m:
+                title_to_url[unescape(m.group(1)).strip()] = url
+        except Exception:
+            continue
+    return title_to_url
 
-    html = resp.text
 
-    m = re.search(r'<h1 class="lp-title">([^<]*)</h1>', html)
-    entry["titel"] = unescape(m.group(1)).strip() if m else None
+def build_markers(units, geocache, title_to_url):
+    markers = []
+    for u in units:
+        try:
+            detail = propstack_get(f"units/{u['id']}.json")
+        except Exception:
+            continue
 
-    m = re.search(r'<p class="lp-subTitle">([^<]*)</p>', html)
-    if m:
-        loc = unescape(m.group(1)).strip()
-        zm = re.match(r"(\d{4,5})\s+(.*)", loc)
-        if zm:
-            entry["plz"], entry["ort"] = zm.group(1), zm.group(2)
-        else:
-            entry["ort"] = loc
-        entry["geo_query"] = f"{loc}, Deutschland"
+        title = detail.get("title") or detail.get("name") or "Anzeige"
+        if title in EXCLUDED_TITLES:
+            continue
 
-    fields = {fm.group("name"): unescape(fm.group("value")).strip() for fm in FIELD_RE.finditer(html)}
+        marketing_type = detail.get("marketing_type")
+        kauf_oder_miete = "Miete" if marketing_type == "RENT" else "Kauf"
+        rs_type = detail.get("rs_type")
+        number_of_rooms = detail.get("number_of_rooms")
+        typ = categorize(rs_type, marketing_type, title, number_of_rooms)
 
-    category = fields.get("category", "")
-    entry["kauf_oder_miete"] = "Miete" if category.lower().startswith("miete") else "Kauf"
+        rf = detail.get("required_fields") or []
+        preis = parse_number(fields_lookup(rf, "Preis", "Kaltmiete"))
+        wohnflaeche = parse_number(fields_lookup(
+            rf, "Wohnfläche ca.", "Vermietbare Fläche ca.", "Büro-/ Praxisfläche ca."
+        ))
+        grundstueck = parse_number(fields_lookup(rf, "Grundstücksfläche ca."))
+        zimmer = parse_number(fields_lookup(rf, "Zimmer")) or number_of_rooms
 
-    sub = fields.get("rs_category", "")
-    if not sub and "–" in category:
-        # Manche Gewerbe-Kauf-Anzeigen liefern gar kein rs_category-Feld;
-        # dann die Unterkategorie aus "Kauf – Einzelhandel" o.ä. ableiten.
-        sub = category.split("–", 1)[1].strip()
-    if entry["kauf_oder_miete"] == "Miete" and sub in MIETE_WOHNUNG_SUBTYPES:
-        entry["typ"] = "Mietwohnung"
-    elif entry["kauf_oder_miete"] == "Miete" and sub in MIETE_GEWERBE_SUBTYPES:
-        entry["typ"] = "Gewerbe"
-    else:
-        entry["typ"] = TYPE_MAP.get(sub, sub or "Sonstiges")
+        geo_query = build_geo_query(detail)
+        ort = detail.get("district") or detail.get("city")
+        geo = geocode(geo_query, geocache, ort=ort)
+        if not geo:
+            print(f"  kein Geocoding-Treffer: {title} ({geo_query})")
+            continue
 
-    # Wohn-/Nutzfläche: Gewerbeeinheiten führen sie unter "net_floor_space"
-    # statt "living_space".
-    entry["wohnflaeche_m2"] = parse_number(fields.get("living_space") or fields.get("net_floor_space"))
-    entry["zimmer"] = parse_number(fields.get("number_of_rooms"))
-    entry["grundstueck_m2"] = parse_number(fields.get("plot_area"))
-    # Preis: Kaufobjekte führen "price"; Mietobjekte führen stattdessen
-    # "total_rent" (Warmmiete) bzw. "base_rent" (Kaltmiete) als Preisfeld.
-    entry["preis"] = parse_number(
-        fields.get("price") or fields.get("total_rent") or fields.get("base_rent")
-    )
-
-    if "reserviert" in html.lower()[:200] or "Reserviert" in fields.get("category", ""):
-        pass  # Statusfeld variiert je Anzeige; grobe Erkennung über Übersichtsseite separat
-
-    return entry
+        markers.append({
+            "titel": title,
+            "url": title_to_url.get(title),
+            "typ": typ,
+            "kauf_oder_miete": kauf_oder_miete,
+            "ort": detail.get("city"),
+            "plz": detail.get("zip_code"),
+            "wohnflaeche_m2": wohnflaeche,
+            "zimmer": zimmer,
+            "grundstueck_m2": grundstueck,
+            "preis": preis,
+            "lat": geo["lat"],
+            "lon": geo["lon"],
+        })
+    return markers
 
 
 def build_html(markers):
@@ -235,7 +271,6 @@ def build_html(markers):
   .popup-title {{ font-weight:bold; margin-bottom:4px; }}
   .popup-table td {{ padding:1px 6px; font-size:13px; }}
   .popup-table td:first-child {{ color:#555; }}
-  .approx {{ font-size:11px; color:#888; font-style:italic; margin-top:4px; }}
   a.expose-link {{ display:inline-block; margin-top:6px; font-size:13px; }}
   .stand {{ position:absolute; bottom:6px; left:6px; z-index:1000; background:rgba(255,255,255,0.85);
     padding:3px 8px; border-radius:6px; font-size:11px; color:#555; }}
@@ -275,7 +310,7 @@ document.getElementById('stand').textContent =
 
 const grouped = {{}};
 listings.forEach(l => {{
-  const key = l.geo_query || l.ort;
+  const key = l.lat + ',' + l.lon;
   grouped[key] = grouped[key] || [];
   grouped[key].push(l);
 }});
@@ -284,7 +319,6 @@ let bounds = [];
 Object.keys(grouped).forEach(key => {{
   const group = grouped[key];
   group.forEach((l, i) => {{
-    if (l.lat == null || l.lon == null) return;
     const base = [l.lat, l.lon];
     const pos = group.length > 1 ? jitter(base, i) : base;
     bounds.push(pos);
@@ -325,26 +359,21 @@ if (bounds.length) {{
 
 
 def main():
-    cache = load_geocache()
-    links = get_overview_links()
-    print(f"{len(links)} Exposé-Links auf der Übersichtsseite gefunden.")
+    if not PROPSTACK_API_KEY:
+        print("Fehler: Umgebungsvariable PROPSTACK_API_KEY ist nicht gesetzt.", file=sys.stderr)
+        sys.exit(1)
 
-    markers = []
-    for url in links:
-        entry = fetch_listing(url)
-        if entry["status"] != "aktiv":
-            print(f"  übersprungen ({entry['status']}): {url}")
-            continue
-        geo = geocode(entry["geo_query"], cache, plz=entry["plz"], ort=entry["ort"])
-        if geo:
-            entry["lat"], entry["lon"] = geo["lat"], geo["lon"]
-        else:
-            entry["lat"], entry["lon"] = None, None
-        markers.append(entry)
-        time.sleep(0.5)
+    geocache = load_geocache()
 
-    placed = sum(1 for m in markers if m["lat"] is not None)
-    print(f"{placed}/{len(markers)} Anzeigen mit Koordinaten platziert.")
+    units = fetch_active_units()
+    print(f"{len(units)} aktiv vermarktete Einheiten in Propstack gefunden.")
+
+    title_to_url = fetch_website_links()
+    print(f"{len(title_to_url)} Exposé-Links von der Homepage zugeordnet.")
+
+    markers = build_markers(units, geocache, title_to_url)
+    print(f"{len(markers)}/{len(units)} Anzeigen mit Koordinaten platziert.")
+
     build_html(markers)
     print(f"Karte geschrieben nach: {OUT_HTML}")
 
