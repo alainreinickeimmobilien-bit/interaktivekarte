@@ -24,6 +24,7 @@ COLORS = {
     "Doppelhaushälfte": "#16a34a",
     "Mehrfamilienhaus": "#dc2626",
     "Eigentumswohnung": "#9333ea",
+    "Mietwohnung": "#0d9488",
     "Gewerbe": "#ea580c",
     "Grundstück": "#65a30d",
     "Sonstiges": "#6b7280",
@@ -113,6 +114,17 @@ TYPE_MAP = {
     "Hotel": "Gewerbe",
 }
 
+# Unterkategorien (rs_category), die bei Mietobjekten auftauchen und auf eine
+# einheitliche Bezeichnung ("Mietwohnung" / "Gewerbe") gemappt werden, statt
+# als unbeschrifteter Rohwert ("Etagenwohnung", "Penthouse" etc.) zu erscheinen.
+MIETE_WOHNUNG_SUBTYPES = {
+    "Wohnung", "Etagenwohnung", "Dachgeschoss", "Penthouse", "Maisonette",
+    "Erdgeschosswohnung", "Souterrain", "Loft", "Apartment",
+}
+MIETE_GEWERBE_SUBTYPES = {
+    "Büro", "Büroetage", "Praxis", "Laden", "Halle", "Lager", "Hotel", "Gewerbe",
+}
+
 
 def parse_number(text):
     if not text:
@@ -159,7 +171,12 @@ def fetch_listing(url):
     entry["kauf_oder_miete"] = "Miete" if category.lower().startswith("miete") else "Kauf"
 
     sub = fields.get("rs_category", "")
-    entry["typ"] = TYPE_MAP.get(sub, sub or "Sonstiges")
+    if entry["kauf_oder_miete"] == "Miete" and sub in MIETE_WOHNUNG_SUBTYPES:
+        entry["typ"] = "Mietwohnung"
+    elif entry["kauf_oder_miete"] == "Miete" and sub in MIETE_GEWERBE_SUBTYPES:
+        entry["typ"] = "Gewerbe"
+    else:
+        entry["typ"] = TYPE_MAP.get(sub, sub or "Sonstiges")
 
     entry["wohnflaeche_m2"] = parse_number(fields.get("living_space"))
     entry["zimmer"] = parse_number(fields.get("number_of_rooms"))
@@ -206,6 +223,7 @@ def build_html(markers):
   <div><span style="background:#16a34a"></span>Doppelhaushälfte</div>
   <div><span style="background:#dc2626"></span>Mehrfamilienhaus</div>
   <div><span style="background:#9333ea"></span>Eigentumswohnung</div>
+  <div><span style="background:#0d9488"></span>Mietwohnung</div>
   <div><span style="background:#ea580c"></span>Gewerbe</div>
   <div><span style="background:#65a30d"></span>Grundstück</div>
 </div>
