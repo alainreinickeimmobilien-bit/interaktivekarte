@@ -24,7 +24,7 @@ COLORS = {
     "Doppelhaushälfte": "#16a34a",
     "Mehrfamilienhaus": "#dc2626",
     "Eigentumswohnung": "#9333ea",
-    "Mietwohnung": "#0d9488",
+    "Mietwohnung": "#db2777",
     "Gewerbe": "#ea580c",
     "Grundstück": "#65a30d",
     "Sonstiges": "#6b7280",
@@ -223,7 +223,7 @@ def build_html(markers):
   <div><span style="background:#16a34a"></span>Doppelhaushälfte</div>
   <div><span style="background:#dc2626"></span>Mehrfamilienhaus</div>
   <div><span style="background:#9333ea"></span>Eigentumswohnung</div>
-  <div><span style="background:#0d9488"></span>Mietwohnung</div>
+  <div><span style="background:#db2777"></span>Mietwohnung</div>
   <div><span style="background:#ea580c"></span>Gewerbe</div>
   <div><span style="background:#65a30d"></span>Grundstück</div>
 </div>
