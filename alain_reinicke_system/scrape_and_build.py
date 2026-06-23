@@ -20,14 +20,16 @@ OVERVIEW_URL = "https://alainreinickeimmobilien.de/immobilien-angebote-chemnitz/
 HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; alain-reinicke-karte/1.0)"}
 
 COLORS = {
-    "Einfamilienhaus": "#2563eb",
-    "Doppelhaushälfte": "#16a34a",
-    "Mehrfamilienhaus": "#dc2626",
-    "Eigentumswohnung": "#9333ea",
-    "Mietwohnung": "#db2777",
-    "Gewerbe": "#ea580c",
-    "Grundstück": "#65a30d",
-    "Sonstiges": "#6b7280",
+    # Tableau10-Palette: bewusst maximal unterscheidbare Kategoriefarben
+    # (statt verwandter Töne, die auf der Karte schwer zu trennen sind).
+    "Einfamilienhaus": "#1f77b4",   # Blau
+    "Doppelhaushälfte": "#2ca02c", # Grün
+    "Mehrfamilienhaus": "#d62728", # Rot
+    "Eigentumswohnung": "#9467bd", # Violett
+    "Mietwohnung": "#8c564b",      # Braun
+    "Gewerbe": "#ff7f0e",          # Orange
+    "Grundstück": "#17becf",       # Türkis/Cyan
+    "Sonstiges": "#7f7f7f",        # Grau
 }
 
 
@@ -228,13 +230,13 @@ def build_html(markers):
 <div id="map"></div>
 <div class="legend">
   <b>Immobilienart</b>
-  <div><span style="background:#2563eb"></span>Einfamilienhaus</div>
-  <div><span style="background:#16a34a"></span>Doppelhaushälfte</div>
-  <div><span style="background:#dc2626"></span>Mehrfamilienhaus</div>
-  <div><span style="background:#9333ea"></span>Eigentumswohnung</div>
-  <div><span style="background:#db2777"></span>Mietwohnung</div>
-  <div><span style="background:#ea580c"></span>Gewerbe</div>
-  <div><span style="background:#65a30d"></span>Grundstück</div>
+  <div><span style="background:#1f77b4"></span>Einfamilienhaus</div>
+  <div><span style="background:#2ca02c"></span>Doppelhaushälfte</div>
+  <div><span style="background:#d62728"></span>Mehrfamilienhaus</div>
+  <div><span style="background:#9467bd"></span>Eigentumswohnung</div>
+  <div><span style="background:#8c564b"></span>Mietwohnung</div>
+  <div><span style="background:#ff7f0e"></span>Gewerbe</div>
+  <div><span style="background:#17becf"></span>Grundstück</div>
 </div>
 <div class="stand" id="stand"></div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -271,7 +273,7 @@ Object.keys(grouped).forEach(key => {{
     const base = [l.lat, l.lon];
     const pos = group.length > 1 ? jitter(base, i) : base;
     bounds.push(pos);
-    const color = colors[l.typ] || "#6b7280";
+    const color = colors[l.typ] || "#7f7f7f";
     const marker = L.circleMarker(pos, {{
       radius: 9, color: "#222", weight: 1, fillColor: color, fillOpacity: 0.9
     }}).addTo(map);
