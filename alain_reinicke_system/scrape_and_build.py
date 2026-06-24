@@ -66,10 +66,10 @@ ORT_FIXES = {
 }
 
 
-def _nominatim_request(query):
+def _nominatim_request(params):
     resp = requests.get(
         "https://nominatim.openstreetmap.org/search",
-        params={"q": query, "format": "json", "limit": 1, "countrycodes": "de"},
+        params={"format": "json", "limit": 1, "countrycodes": "de", **params},
         headers={"User-Agent": "alain-reinicke-karte/1.0 (sophia)"},
         timeout=10,
     )
@@ -78,21 +78,34 @@ def _nominatim_request(query):
     return {"lat": float(data[0]["lat"]), "lon": float(data[0]["lon"])} if data else None
 
 
-def geocode(query, cache, ort=None):
-    if not query:
+def geocode(cache, street=None, house_number=None, zip_code=None, city=None, district=None):
+    """Geocodiert über Nominatims strukturierte Suche (street/postalcode/city
+    getrennt) statt eines zusammengesetzten Freitexts. Freitext lässt
+    Nominatim z.B. bei "Forststraße, 09221 Neukirchen" trotz korrekter PLZ
+    auf ein gleichnamiges Neukirchen in Nordfriesland ausweichen, weil die
+    Straße dort ebenfalls existiert; getrennte Felder verhindern das."""
+    ort = district or city
+    key = "|".join([street or "", house_number or "", zip_code or "", ort or ""]).strip().lower()
+    if not key:
         return None
-    key = query.strip().lower()
     if key in cache:
         return cache[key]
     result = None
     try:
-        result = _nominatim_request(query)
+        if street and zip_code:
+            result = _nominatim_request({
+                "street": f"{street} {house_number or ''}".strip(),
+                "postalcode": zip_code,
+                "city": ort or "",
+            })
+        if not result and zip_code and ort:
+            result = _nominatim_request({"postalcode": zip_code, "city": ort})
         if not result and ort:
-            result = _nominatim_request(f"{ort}, Deutschland")
+            result = _nominatim_request({"city": ort})
         if not result and ort:
             fixed = ORT_FIXES.get(ort.strip().lower())
             if fixed:
-                result = _nominatim_request(f"{fixed}, Deutschland")
+                result = _nominatim_request({"q": f"{fixed}, Deutschland"})
     except Exception:
         result = None
     cache[key] = result
@@ -162,19 +175,6 @@ def categorize(rs_type, marketing_type, title, number_of_rooms):
     return "Sonstiges"
 
 
-def build_geo_query(detail):
-    street = (detail.get("street") or "").strip()
-    house_number = (detail.get("house_number") or "").strip()
-    zip_code = (detail.get("zip_code") or "").strip()
-    city = (detail.get("city") or "").strip()
-    district = (detail.get("district") or "").strip()
-    if street:
-        addr = f"{street} {house_number}".strip()
-        return f"{addr}, {zip_code} {city}, Deutschland".strip()
-    ort = district or city
-    return f"{zip_code} {ort}, Deutschland".strip()
-
-
 def fetch_website_links():
     """Leichte, fehlertolerante Zuordnung Titel -> öffentlicher Exposé-Link.
     Nur für den 'Exposé öffnen'-Button; alle Objektdaten kommen aus Propstack."""
@@ -227,11 +227,16 @@ def build_markers(units, geocache, title_to_url):
         grundstueck = parse_number(fields_lookup(rf, "Grundstücksfläche ca."))
         zimmer = parse_number(fields_lookup(rf, "Zimmer")) or number_of_rooms
 
-        geo_query = build_geo_query(detail)
-        ort = detail.get("district") or detail.get("city")
-        geo = geocode(geo_query, geocache, ort=ort)
+        geo = geocode(
+            geocache,
+            street=detail.get("street"),
+            house_number=detail.get("house_number"),
+            zip_code=detail.get("zip_code"),
+            city=detail.get("city"),
+            district=detail.get("district"),
+        )
         if not geo:
-            print(f"  kein Geocoding-Treffer: {title} ({geo_query})")
+            print(f"  kein Geocoding-Treffer: {title} ({detail.get('zip_code')} {detail.get('city')})")
             continue
 
         markers.append({
