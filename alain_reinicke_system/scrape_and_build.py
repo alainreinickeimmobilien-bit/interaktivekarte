@@ -266,8 +266,13 @@ def build_html(markers):
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
-  html, body {{ margin:0; padding:0; height:100%; font-family: Arial, Helvetica, sans-serif; }}
-  #map {{ height:100vh; width:100%; }}
+  html, body {{ margin:0; padding:0; height:100%; width:100%; overflow:hidden;
+    font-family: Arial, Helvetica, sans-serif; -webkit-text-size-adjust:100%; }}
+  /* height:100% statt 100vh: 100vh wird in eingebetteten iframes auf
+     mobilen Browsern (v.a. iOS Safari) teils am äußeren Browserfenster
+     statt am iframe selbst gemessen und führt zu abgeschnittener/zu
+     großer Darstellung. */
+  #map {{ height:100%; width:100%; }}
   .legend {{ position:absolute; top:10px; right:10px; z-index:1000; background:white;
     padding:10px 14px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.3); font-size:13px; max-width:230px; }}
   .legend b {{ display:block; margin-bottom:6px; }}
@@ -284,7 +289,19 @@ def build_html(markers):
   .popup-group {{ font-weight:bold; margin-bottom:8px; font-size:13px; color:#333; }}
   .popup-divider {{ border:none; border-top:1px solid #ddd; margin:10px 0; }}
   .dot {{ display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:6px; vertical-align:middle; }}
-  .leaflet-popup-content {{ max-height:320px; overflow-y:auto; }}
+  .leaflet-popup-content {{ max-height:260px; overflow-y:auto; }}
+
+  /* Schmale Bildschirme (Smartphones): Legende verkleinern und
+     einklappbar machen, damit sie nicht zu viel von der Karte verdeckt. */
+  @media (max-width: 480px) {{
+    .legend {{ top:6px; right:6px; padding:6px 8px; font-size:11px; max-width:150px; }}
+    .legend b {{ margin-bottom:3px; }}
+    .legend span {{ width:9px; height:9px; margin-right:4px; }}
+    .legend div {{ margin:1px 0; }}
+    .stand {{ font-size:9px; padding:2px 6px; }}
+    .leaflet-popup-content {{ width:220px !important; max-height:45vh; }}
+    .popup-table td {{ font-size:12px; padding:1px 4px; }}
+  }}
 </style>
 </head>
 <body>
@@ -378,6 +395,13 @@ Object.keys(grouped).forEach(key => {{
 if (bounds.length) {{
   map.fitBounds(bounds, {{ padding: [40,40] }});
 }}
+
+// Auf Mobilgeräten ändert sich die sichtbare Höhe oft nach dem ersten
+// Rendern (Adressleiste ein-/ausblenden, Drehung) – Leaflet danach neu
+// vermessen lassen, sonst bleiben Kacheln/Marker leicht verschoben.
+window.addEventListener('resize', () => map.invalidateSize());
+window.addEventListener('orientationchange', () => setTimeout(() => map.invalidateSize(), 200));
+setTimeout(() => map.invalidateSize(), 300);
 </script>
 </body>
 </html>
