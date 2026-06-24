@@ -275,7 +275,11 @@ def build_html(markers):
   #map {{ height:100%; width:100%; }}
   .legend {{ position:absolute; top:10px; right:10px; z-index:1000; background:white;
     padding:10px 14px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.3); font-size:13px; max-width:230px; }}
-  .legend b {{ display:block; margin-bottom:6px; }}
+  .legend b {{ display:block; margin-bottom:6px; cursor:pointer; user-select:none; }}
+  .legend.collapsed .legend-items {{ display:none; }}
+  .legend.collapsed b {{ margin-bottom:0; }}
+  .legend-toggle-icon {{ display:inline-block; margin-right:5px; transition:transform 0.2s; }}
+  .legend.collapsed .legend-toggle-icon {{ transform:rotate(-90deg); }}
   .legend span {{ display:inline-block; width:12px; height:12px; border-radius:50%; margin-right:6px; vertical-align:middle; }}
   .popup-title {{ font-weight:bold; margin-bottom:4px; }}
   .popup-table td {{ padding:1px 6px; font-size:13px; }}
@@ -306,15 +310,17 @@ def build_html(markers):
 </head>
 <body>
 <div id="map"></div>
-<div class="legend">
-  <b>Immobilienart</b>
-  <div><span style="background:#1f77b4"></span>Einfamilienhaus</div>
-  <div><span style="background:#2ca02c"></span>Doppelhaushälfte</div>
-  <div><span style="background:#d62728"></span>Mehrfamilienhaus</div>
-  <div><span style="background:#9467bd"></span>Eigentumswohnung</div>
-  <div><span style="background:#8c564b"></span>Mietwohnung</div>
-  <div><span style="background:#ff7f0e"></span>Gewerbe</div>
-  <div><span style="background:#17becf"></span>Grundstück</div>
+<div class="legend" id="legend">
+  <b id="legend-toggle"><span class="legend-toggle-icon">&#9662;</span>Immobilienart</b>
+  <div class="legend-items">
+    <div><span style="background:#1f77b4"></span>Einfamilienhaus</div>
+    <div><span style="background:#2ca02c"></span>Doppelhaushälfte</div>
+    <div><span style="background:#d62728"></span>Mehrfamilienhaus</div>
+    <div><span style="background:#9467bd"></span>Eigentumswohnung</div>
+    <div><span style="background:#8c564b"></span>Mietwohnung</div>
+    <div><span style="background:#ff7f0e"></span>Gewerbe</div>
+    <div><span style="background:#17becf"></span>Grundstück</div>
+  </div>
 </div>
 <div class="stand" id="stand"></div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -330,6 +336,16 @@ L.tileLayer('https://{{s}}.tile.openstreetmap.org/{{z}}/{{x}}/{{y}}.png', {{
 
 document.getElementById('stand').textContent =
   'Stand: ' + new Date().toLocaleDateString('de-DE') + ' · ' + listings.length + ' Anzeigen';
+
+const legendEl = document.getElementById('legend');
+// Auf schmalen Bildschirmen (Smartphones) standardmäßig eingeklappt,
+// damit die Legende nicht zu viel von der Karte verdeckt.
+if (window.innerWidth <= 480) {{
+  legendEl.classList.add('collapsed');
+}}
+document.getElementById('legend-toggle').addEventListener('click', () => {{
+  legendEl.classList.toggle('collapsed');
+}});
 
 const grouped = {{}};
 listings.forEach(l => {{
