@@ -562,5 +562,13 @@
   "hauptstrasse|3|09390|gornsdorf": {
     "lat": 50.7169668,
     "lon": 12.8884123
+  },
+  "am ullersberg|3|09212|limbach-oberfrohna": {
+    "lat": 50.8865724,
+    "lon": 12.6610915
+  },
+  "am nonnenwald |5||moosheim": {
+    "lat": 51.0123657,
+    "lon": 13.0872485
   }
 }
