@@ -574,5 +574,9 @@
   "chemnitzer str. 27|27|09244|oberlichtenau": {
     "lat": 50.8984814,
     "lon": 12.9792657
+  },
+  "erich-mühsam-straße|32|09112|chemnitz": {
+    "lat": 50.8366514,
+    "lon": 12.8982351
   }
 }
